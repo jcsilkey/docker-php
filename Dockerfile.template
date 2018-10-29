@@ -1,0 +1,90 @@
+FROM php:7.2-${PHP_VARIANT}-alpine
+
+RUN apk add --update --no-cache \
+        tini \
+        git \
+        hiredis \
+        libpng-dev \
+        libwebp-dev \
+        libjpeg \
+        zlib \
+        zlib-dev \
+        libxpm-dev \
+        freetype-dev \
+        postgresql-dev \
+        libzip \
+        gmp-dev \
+        libmcrypt-dev
+
+RUN apk --update --no-cache add --virtual build-dependencies \
+        autoconf \
+        gcc \
+        g++ \
+        make \
+    && pecl update-channels \
+    && docker-php-ext-install \
+        gd \
+        bcmath \
+        exif \
+        pcntl \
+        pdo_pgsql \
+        pgsql \
+        zip \
+        gmp \
+    && pecl install apcu \
+    && pecl install ast \
+    && pecl install mcrypt-1.0.1 \
+    && pecl install -o -f redis \
+    && pecl install xdebug-2.6.1 \
+    && rm -rf /tmp/pear ~/.pearrc \
+    && apk del build-dependencies
+
+RUN docker-php-ext-enable \
+    apcu \
+    ast \
+    mcrypt \
+    redis \
+    xdebug
+
+# install wait-for script
+COPY wait-for /usr/bin/wait-for
+
+RUN chmod a+x /usr/bin/wait-for
+
+# install composer
+COPY install_composer.sh .
+
+RUN chmod u+x install_composer.sh \
+    && ./install_composer.sh \
+    && rm install_composer.sh
+
+# install sami
+RUN curl -O http://get.sensiolabs.org/sami.phar \
+    && chmod +x sami.phar \
+    && mv sami.phar /usr/bin/sami
+
+# install entrypoint script
+COPY ${PHP_EXECUTABLE}-entrypoint.sh /usr/bin/${PHP_EXECUTABLE}-entrypoint.sh
+
+RUN chmod a+x /usr/bin/${PHP_EXECUTABLE}-entrypoint.sh
+
+# create user and group to run as
+RUN getent group ${CONTAINER_GROUP} || addgroup -S ${CONTAINER_GROUP} \
+    && id -u ${CONTAINER_USER} > /dev/null 2&>1 || adduser -S ${CONTAINER_USER} \
+    && addgroup ${CONTAINER_USER} ${CONTAINER_GROUP}
+
+# create root application directory and set permissions
+RUN mkdir -p /app \
+    && chown -R ${CONTAINER_USER}:${CONTAINER_GROUP} /app
+
+USER ${CONTAINER_USER}
+
+RUN composer global require hirak/prestissimo
+
+WORKDIR /app
+
+ENV PATH /app/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+
+ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/${PHP_EXECUTABLE}-entrypoint.sh"]
+
+${DEFAULT_COMMAND}
