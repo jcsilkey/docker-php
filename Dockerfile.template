@@ -1,4 +1,4 @@
-FROM php:7.2-${PHP_VARIANT}-alpine
+FROM php:7.3.2-${PHP_VARIANT}-alpine
 
 RUN apk add --update --no-cache \
         tini \
@@ -13,8 +13,11 @@ RUN apk add --update --no-cache \
         freetype-dev \
         postgresql-dev \
         libzip \
+        libzip-dev \
         gmp-dev \
-        libmcrypt-dev
+        libmcrypt-dev \
+        libcap \
+    && setcap 'cap_net_bind_service=+ep' /usr/local/bin/php
 
 RUN apk --update --no-cache add --virtual build-dependencies \
         autoconf \
@@ -31,11 +34,11 @@ RUN apk --update --no-cache add --virtual build-dependencies \
         pgsql \
         zip \
         gmp \
-    && pecl install apcu \
-    && pecl install ast \
-    && pecl install mcrypt-1.0.1 \
-    && pecl install -o -f redis \
-    && pecl install xdebug-2.6.1 \
+    && pecl install apcu-5.1.17 \
+    && pecl install ast-1.0.1 \
+    && pecl install mcrypt-1.0.2 \
+    && pecl install -o -f redis-4.2.0 \
+    && pecl install xdebug-2.7.0RC2 \
     && rm -rf /tmp/pear ~/.pearrc \
     && apk del build-dependencies
 
@@ -70,8 +73,7 @@ RUN chmod a+x /usr/bin/${PHP_EXECUTABLE}-entrypoint.sh
 
 # create user and group to run as
 RUN getent group ${CONTAINER_GROUP} || addgroup -S ${CONTAINER_GROUP} \
-    && id -u ${CONTAINER_USER} > /dev/null 2&>1 || adduser -S ${CONTAINER_USER} \
-    && addgroup ${CONTAINER_USER} ${CONTAINER_GROUP}
+    && id -u ${CONTAINER_USER} > /dev/null 2&>1 || adduser -S -G ${CONTAINER_GROUP} ${CONTAINER_USER}
 
 # create root application directory and set permissions
 RUN mkdir -p /app \

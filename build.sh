@@ -68,13 +68,12 @@ env -i \
         ' \
         < "entrypoint.template" > "cli/php-entrypoint.sh"
 
-
 cp install_composer.sh cli/install_composer.sh
 
 cp wait-for cli/wait-for
 
-docker build -t jcsilkey/php:7.2-fpm \
+docker build -t jcsilkey/php:7.3.2-fpm \
     -f fpm/Dockerfile fpm
 
-docker build -t jcsilkey/php:7.2-cli \
+docker build -t jcsilkey/php:7.3.2-cli \
     -f cli/Dockerfile cli
