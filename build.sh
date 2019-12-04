@@ -72,8 +72,8 @@ cp install_composer.sh cli/install_composer.sh
 
 cp wait-for cli/wait-for
 
-docker build -t jcsilkey/php:7.3.2-fpm \
+docker build -t jcsilkey/php:7.4-fpm \
     -f fpm/Dockerfile fpm
 
-docker build -t jcsilkey/php:7.3.2-cli \
+docker build -t jcsilkey/php:7.4-cli \
     -f cli/Dockerfile cli

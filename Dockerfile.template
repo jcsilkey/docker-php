@@ -1,4 +1,4 @@
-FROM php:7.3.2-${PHP_VARIANT}-alpine
+FROM php:7.4-${PHP_VARIANT}-alpine
 
 RUN apk add --update --no-cache \
         tini \
@@ -34,11 +34,11 @@ RUN apk --update --no-cache add --virtual build-dependencies \
         pgsql \
         zip \
         gmp \
-    && pecl install apcu-5.1.17 \
-    && pecl install ast-1.0.1 \
-    && pecl install mcrypt-1.0.2 \
-    && pecl install -o -f redis-4.2.0 \
-    && pecl install xdebug-2.7.0RC2 \
+    && pecl install apcu-5.1.18 \
+    && pecl install ast-1.0.5 \
+    && pecl install mcrypt-1.0.3 \
+    && pecl install -o -f redis-5.1.1 \
+    && pecl install xdebug-2.8.1 \
     && rm -rf /tmp/pear ~/.pearrc \
     && apk del build-dependencies
 
